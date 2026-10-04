@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BuildWaste – Construction Material Wastage & Cost Control</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f5fa',
+              100: '#e1ecf5',
+              700: '#1d4263',
+              800: '#132d46',
+              900: '#0b1b2b',
+              primary: '#0f2942', // Dark blue primary
+            },
+            accent: {
+              orange: '#ea580c', // Orange warning/highlight
+              green: '#16a34a',  // Green for low wastage
+              amber: '#d97706',  // Amber for moderate wastage
+              red: '#dc2626',    // Red for high wastage
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @media print {
+      body {
+        background-color: white !important;
+        color: black !important;
+        font-size: 12pt;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+      .page-break {
+        page-break-before: always;
+      }
+      .shadow-sm, .shadow-md, .shadow-lg {
+        box-shadow: none !important;
+        border: 1px solid #d1d5db !important;
+      }
+    }
+    .print-only {
+      display: none;
+    }
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- Top Navigation Header -->
+  <header class="bg-brand-primary text-white sticky top-0 z-40 shadow-md no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="p-2 bg-amber-500 rounded-lg text-slate-950 font-black flex items-center justify-center">
+          <i data-lucide="hard-hat" class="w-6 h-6 text-brand-primary"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-extrabold text-xl tracking-tight text-white">Build<span class="text-amber-400">Waste</span></span>
+            <span class="bg-blue-900/60 text-blue-200 text-xs px-2 py-0.5 rounded font-mono border border-blue-400/30">CE-PBL</span>
+          </div>
+          <p class="text-xs text-slate-300 hidden sm:block">Construction Material Wastage & Cost Control System</p>
+        </div>
+      </div>
+
+      <!-- Quick Nav and Actions -->
+      <div class="flex items-center space-x-3">
+        <nav class="hidden md:flex items-center space-x-1 text-sm font-medium">
+          <a href="#dashboard" class="px-3 py-1.5 rounded hover:bg-slate-800 text-slate-200 transition">Dashboard</a>
+          <a href="#materials" class="px-3 py-1.5 rounded hover:bg-slate-800 text-slate-200 transition">Material Input</a>
+          <a href="#recommendations" class="px-3 py-1.5 rounded hover:bg-slate-800 text-slate-200 transition">Analysis & Advice</a>
+          <a href="#pbl-info" class="px-3 py-1.5 rounded hover:bg-slate-800 text-slate-200 transition">About PBL</a>
+        </nav>
+        <button onclick="window.print()" class="flex items-center space-x-1.5 bg-amber-500 hover:bg-amber-600 text-brand-primary font-bold px-3.5 py-1.5 rounded-lg text-sm transition shadow-sm">
+          <i data-lucide="printer" class="w-4 h-4"></i>
+          <span>Print Report</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero / Project Title Banner -->
+  <section class="bg-white border-b border-slate-200 py-6 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <div class="inline-flex items-center space-x-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-800 mb-2 border border-blue-200">
+          <i data-lucide="ruler" class="w-3.5 h-3.5 text-blue-600"></i>
+          <span>Quantity Surveying & Estimation Project</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-brand-primary">BuildWaste – Material Wastage Calculator</h1>
+        <p class="text-slate-600 text-sm sm:text-base mt-1">Real-time quantification of material losses, cost leakage estimation, and waste-reduction insights for construction sites.</p>
+      </div>
+
+      <!-- Quick Project Tag Details -->
+      <div class="flex flex-wrap items-center gap-2 text-xs bg-slate-50 p-3 rounded-lg border border-slate-200">
+        <div>
+          <span class="text-slate-500 block">Project:</span>
+          <strong class="text-slate-800 font-semibold">Residential Building Construction</strong>
+        </div>
+        <div class="h-7 w-px bg-slate-300 mx-2 hidden sm:block"></div>
+        <div>
+          <span class="text-slate-500 block">Prepared By:</span>
+          <strong class="text-slate-800 font-semibold">Civil Engineering PBL Team</strong>
+        </div>
+        <div class="h-7 w-px bg-slate-300 mx-2 hidden sm:block"></div>
+        <button onclick="resetData()" class="no-print text-red-600 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50 text-xs flex items-center gap-1 transition">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset
+        </button>
+        <button onclick="loadSampleData()" class="no-print bg-slate-200 hover:bg-slate-300 text-slate-800 font-medium px-2.5 py-1 rounded text-xs flex items-center gap-1 transition">
+          <i data-lucide="database" class="w-3.5 h-3.5"></i> Reload Sample
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-8">
+
+    <!-- Print Header Only -->
+    <div class="print-only border-b-2 border-slate-900 pb-4 mb-6">
+      <div class="flex justify-between items-start">
+        <div>
+          <h1 class="text-3xl font-extrabold text-slate-900">BuildWaste – Material Wastage Report</h1>
+          <p class="text-sm text-slate-600">Department of Civil Engineering | Quantity Surveying & Cost Control PBL</p>
+          <div class="mt-2 text-xs text-slate-700">
+            <span><strong>Project:</strong> Residential Building Construction</span> | 
+            <span><strong>Type:</strong> Residential G+2</span> | 
+            <span><strong>Date Generated:</strong> <span id="printDate"></span></span>
+          </div>
+        </div>
+        <div class="text-right text-xs">
+          <p class="font-bold text-slate-800">CIVIL ENGINEERING PBL TEAM</p>
+          <p class="text-slate-500">Academic Project Presentation</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1. DASHBOARD OVERVIEW CARDS -->
+    <section id="dashboard" class="scroll-mt-20">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <i data-lucide="layout-dashboard" class="w-5 h-5 text-blue-600"></i>
+          Key Performance Indicators
+        </h2>
+        <span class="text-xs text-slate-500 italic">Auto-calculated from material entries</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Card 1: Total Materials -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition relative overflow-hidden">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Tracked Materials</span>
+            <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
+              <i data-lucide="boxes" class="w-5 h-5"></i>
+            </div>
+          </div>
+          <div class="mt-2">
+            <span id="kpiTotalMaterials" class="text-3xl font-extrabold text-brand-primary">6</span>
+            <span class="text-xs text-slate-500 ml-1">items listed</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">Core civil structural & finishing items</p>
+          <div class="absolute bottom-0 left-0 right-0 h-1 bg-blue-600"></div>
+        </div>
+
+        <!-- Card 2: Total Wastage Quantity -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-amber-300 transition relative overflow-hidden">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Wastage</span>
+            <div class="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+              <i data-lucide="trash-2" class="w-5 h-5"></i>
+            </div>
+          </div>
+          <div class="mt-2">
+            <span id="kpiTotalWastageQty" class="text-3xl font-extrabold text-amber-600">388.5</span>
+            <span class="text-xs text-slate-500 ml-1">aggregate units</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">Quantity lost across all materials</p>
+          <div class="absolute bottom-0 left-0 right-0 h-1 bg-amber-500"></div>
+        </div>
+
+        <!-- Card 3: Average Wastage % -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-purple-300 transition relative overflow-hidden">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Average Wastage %</span>
+            <div class="w-9 h-9 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+              <i data-lucide="percent" class="w-5 h-5"></i>
+            </div>
+          </div>
+          <div class="mt-2 flex items-baseline">
+            <span id="kpiAvgWastagePercent" class="text-3xl font-extrabold text-slate-900">6.85%</span>
+            <span id="kpiWastageBadge" class="ml-2 text-xs font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-800">Moderate</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">Target benchmark: below 5.0%</p>
+          <div id="kpiStatusStrip" class="absolute bottom-0 left-0 right-0 h-1 bg-amber-500"></div>
+        </div>
+
+        <!-- Card 4: Total Wastage Cost -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-red-300 transition relative overflow-hidden">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Wastage Cost</span>
+            <div class="w-9 h-9 rounded-lg bg-red-50 text-red-600 flex items-center justify-center">
+              <i data-lucide="indian-rupee" class="w-5 h-5"></i>
+            </div>
+          </div>
+          <div class="mt-2">
+            <span id="kpiTotalWastageCost" class="text-3xl font-extrabold text-red-600">₹91,050</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">Direct monetary capital lost on site</p>
+          <div class="absolute bottom-0 left-0 right-0 h-1 bg-red-600"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHARTS SECTION: COMPARISON & COST IMPACT -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Chart 1: Quantity Purchased vs Quantity Used -->
+      <div class="lg:col-span-7 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="bar-chart-3" class="w-4 h-4 text-blue-600"></i>
+                Material Wastage Overview
+              </h3>
+              <p class="text-xs text-slate-500">Normalized visualization of Quantity Purchased vs. Quantity Actually Used</p>
+            </div>
+            <span class="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded font-medium border border-slate-200">Interactive</span>
+          </div>
+          <div class="relative h-64 w-full">
+            <canvas id="materialsChart"></canvas>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-blue-800 inline-block"></span> Purchased Quantity</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-emerald-500 inline-block"></span> Quantity Used</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-red-500 inline-block"></span> Wasted Volume</span>
+        </div>
+      </div>
+
+      <!-- Chart 2: Cost Breakdown & Potential Savings -->
+      <div class="lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="pie-chart" class="w-4 h-4 text-amber-600"></i>
+                Cost Distribution & Leakage
+              </h3>
+              <p class="text-xs text-slate-500">Purchased vs Used vs Wasted Cost Breakdown</p>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-3 mb-3 text-xs">
+            <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+              <span class="text-slate-500 block">Total Purchased Cost</span>
+              <span id="costTotalPurchased" class="text-base font-bold text-slate-900">₹7,56,000</span>
+            </div>
+            <div class="p-2.5 bg-emerald-50 rounded-lg border border-emerald-200">
+              <span class="text-emerald-700 block">Total Utilized Cost</span>
+              <span id="costTotalUsed" class="text-base font-bold text-emerald-800">₹6,64,950</span>
+            </div>
+          </div>
+
+          <div class="relative h-44 w-full flex items-center justify-center">
+            <canvas id="costDonutChart"></canvas>
+          </div>
+        </div>
+
+        <div class="mt-2 pt-3 border-t border-slate-100 bg-amber-50/70 p-3 rounded-lg border border-amber-200/60">
+          <div class="flex items-start gap-2">
+            <i data-lucide="sparkles" class="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0"></i>
+            <div>
+              <span class="text-xs font-bold text-amber-900 block">Estimated Potential Savings: <span id="potentialSavingsText" class="text-amber-700 font-extrabold">₹63,735</span></span>
+              <p class="text-xs text-amber-800/80">Achievable by bringing site wastage below 3% industry QS benchmark through optimal cutting and moisture shelter.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. MATERIAL INPUT & EDITABLE TABLE -->
+    <section id="materials" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden scroll-mt-20">
+      <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-50/60">
+        <div>
+          <h2 class="text-lg font-bold text-brand-primary flex items-center gap-2">
+            <i data-lucide="calculator" class="w-5 h-5 text-blue-600"></i>
+            Material Quantity & Cost Register
+          </h2>
+          <p class="text-xs text-slate-500">Edit quantities or rates directly in the table. Calculations update dynamically.</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap items-center gap-2 no-print">
+          <button onclick="openAddMaterialModal()" class="inline-flex items-center space-x-1.5 bg-brand-primary hover:bg-blue-950 text-white font-semibold px-3 py-1.5 rounded-lg text-xs transition shadow-sm">
+            <i data-lucide="plus-circle" class="w-4 h-4 text-amber-400"></i>
+            <span>Add Material</span>
+          </button>
+          <button onclick="loadSampleData()" class="inline-flex items-center space-x-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-medium px-2.5 py-1.5 rounded-lg text-xs transition">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-blue-600"></i>
+            <span>Default Samples</span>
+          </button>
+          <button onclick="resetData()" class="inline-flex items-center space-x-1 bg-white hover:bg-red-50 text-red-600 border border-red-200 font-medium px-2.5 py-1.5 rounded-lg text-xs transition">
+            <i data-lucide="trash" class="w-3.5 h-3.5"></i>
+            <span>Clear Table</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Formula Bar Explanation for PBL Jury / Presentation -->
+      <div class="px-5 py-2.5 bg-blue-50/70 border-b border-blue-100 flex flex-wrap items-center justify-between text-xs text-blue-900 gap-2 font-mono">
+        <div class="flex items-center gap-1.5">
+          <span class="font-bold text-blue-950 bg-blue-200/60 px-2 py-0.5 rounded">Formulas Used:</span>
+          <span>Wastage Qty = Purchased − Used</span>
+          <span class="text-blue-300">|</span>
+          <span>Wastage % = (Wastage Qty ÷ Purchased) × 100</span>
+          <span class="text-blue-300">|</span>
+          <span>Wastage Cost = Wastage Qty × Rate</span>
+        </div>
+        <div class="text-slate-500 font-sans text-xs">
+          Thresholds: <span class="text-emerald-700 font-semibold">&le;5% Low</span>, <span class="text-amber-700 font-semibold">5-10% Moderate</span>, <span class="text-red-700 font-semibold">&gt;10% High</span>
+        </div>
+      </div>
+
+      <!-- Table Container -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+          <thead>
+            <tr class="bg-slate-100/80 text-slate-700 font-semibold border-b border-slate-200 uppercase text-[11px] tracking-wider">
+              <th class="py-3 px-4">Material</th>
+              <th class="py-3 px-3">Unit</th>
+              <th class="py-3 px-3 w-28">Purchased</th>
+              <th class="py-3 px-3 w-28">Used</th>
+              <th class="py-3 px-3 w-28">Rate (₹)</th>
+              <th class="py-3 px-3 text-right">Wastage Qty</th>
+              <th class="py-3 px-3 text-right">Wastage %</th>
+              <th class="py-3 px-3 text-right">Wastage Cost</th>
+              <th class="py-3 px-3 text-center">Status</th>
+              <th class="py-3 px-3 text-center no-print w-16">Action</th>
+            </tr>
+          </thead>
+          <tbody id="materialsTableBody" class="divide-y divide-slate-200 font-normal">
+            <!-- Rendered by JavaScript -->
+          </tbody>
+          <tfoot class="bg-slate-50 font-bold border-t-2 border-slate-300 text-slate-900 text-xs sm:text-sm">
+            <tr>
+              <td class="py-3 px-4" colspan="2">TOTAL PROJECT SUMMARY</td>
+              <td id="footerTotalPurchased" class="py-3 px-3 font-mono text-slate-700">-</td>
+              <td id="footerTotalUsed" class="py-3 px-3 font-mono text-slate-700">-</td>
+              <td class="py-3 px-3 text-slate-400 font-normal">-</td>
+              <td id="footerWastageQty" class="py-3 px-3 text-right font-mono text-amber-700 font-bold">-</td>
+              <td id="footerAvgWastage" class="py-3 px-3 text-right font-mono text-purple-700 font-bold">-</td>
+              <td id="footerTotalCost" class="py-3 px-3 text-right font-mono text-red-600 font-extrabold text-base">₹0</td>
+              <td id="footerStatusBadge" class="py-3 px-3 text-center">
+                <span class="px-2 py-0.5 rounded text-xs bg-slate-200 text-slate-700">Calculated</span>
+              </td>
+              <td class="py-3 px-3 no-print"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- 5. RECOMMENDATIONS & CIVIL QS GUIDELINES -->
+    <section id="recommendations" class="scroll-mt-20">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Dynamic Site Specific Evaluation -->
+        <div class="lg:col-span-6 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="shield-alert" class="w-5 h-5 text-amber-500"></i>
+                Automated Site Recommendations
+              </h3>
+              <span id="siteStatusIndicator" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                Evaluation Active
+              </span>
+            </div>
+
+            <div id="dynamicRecommendationBox" class="p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 mb-4 transition-all">
+              <div class="flex items-start gap-3">
+                <i id="recIcon" data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"></i>
+                <div>
+                  <h4 id="recHeadline" class="font-bold text-sm">Site-Specific Action Required</h4>
+                  <p id="recBody" class="text-xs mt-1 leading-relaxed text-amber-800">
+                    Calculating recommendation based on live site waste percentages...
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Material Alert Highlights -->
+            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Critical Materials Requiring Audit:</h4>
+            <div id="criticalMaterialsList" class="space-y-2 text-xs">
+              <!-- Injected by JavaScript -->
+            </div>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex items-center gap-1.5">
+            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-600"></i>
+            <span>Generated using Indian Standard (IS) Site Practice norms & Quantity Surveying parameters.</span>
+          </div>
+        </div>
+
+        <!-- General QS Best Practices Section -->
+        <div class="lg:col-span-6 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2 mb-4">
+            <i data-lucide="clipboard-check" class="w-5 h-5 text-blue-600"></i>
+            Standard Civil Engineering Waste Mitigation Guidelines
+          </h3>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 hover:bg-blue-50/50 transition">
+              <div class="font-semibold text-slate-900 flex items-center gap-1.5 mb-1">
+                <i data-lucide="check" class="w-4 h-4 text-emerald-600"></i>
+                Improve Estimation
+              </div>
+              <p class="text-slate-600 text-[11px] leading-relaxed">
+                Employ detailed bar bending schedules (BBS) and center-line method for accurate initial procurement without over-ordering.
+              </p>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 hover:bg-blue-50/50 transition">
+              <div class="font-semibold text-slate-900 flex items-center gap-1.5 mb-1">
+                <i data-lucide="check" class="w-4 h-4 text-emerald-600"></i>
+                Store Materials Properly
+              </div>
+              <p class="text-slate-600 text-[11px] leading-relaxed">
+                Keep cement bags 150mm off the ground on wooden pallets. Cover sand/aggregates to avoid wind erosion and rainwater run-off.
+              </p>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 hover:bg-blue-50/50 transition">
+              <div class="font-semibold text-slate-900 flex items-center gap-1.5 mb-1">
+                <i data-lucide="check" class="w-4 h-4 text-emerald-600"></i>
+                Reduce Cutting Losses
+              </div>
+              <p class="text-slate-600 text-[11px] leading-relaxed">
+                Utilize standard rebar cutting lengths to minimize end pieces. Plan tile layout dry-runs prior to mortar bedding.
+              </p>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 hover:bg-blue-50/50 transition">
+              <div class="font-semibold text-slate-900 flex items-center gap-1.5 mb-1">
+                <i data-lucide="check" class="w-4 h-4 text-emerald-600"></i>
+                Monitor Daily Consumption
+              </div>
+              <p class="text-slate-600 text-[11px] leading-relaxed">
+                Reconcile daily theoretical consumption with actual bin stock levels to detect discrepancies immediately.
+              </p>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 hover:bg-blue-50/50 transition">
+              <div class="font-semibold text-slate-900 flex items-center gap-1.5 mb-1">
+                <i data-lucide="check" class="w-4 h-4 text-emerald-600"></i>
+                Material Issue Records
+              </div>
+              <p class="text-slate-600 text-[11px] leading-relaxed">
+                Implement strict Site Issue Vouchers (SIV) and prevent contractor over-allocation without engineer authorization.
+              </p>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 hover:bg-blue-50/50 transition">
+              <div class="font-semibold text-slate-900 flex items-center gap-1.5 mb-1">
+                <i data-lucide="check" class="w-4 h-4 text-emerald-600"></i>
+                Regular Site Inspections
+              </div>
+              <p class="text-slate-600 text-[11px] leading-relaxed">
+                Conduct unannounced batching audits and check transit spillage during ready-mix concrete or mortar transfer.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 & 11. PBL INFORMATION & PROJECT SUMMARY -->
+    <section id="pbl-info" class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm scroll-mt-20">
+      <div class="border-b border-slate-200 pb-4 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-2">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-2.5 py-1 rounded">Academic Coursework</span>
+          <h2 class="text-xl font-extrabold text-brand-primary mt-1">Civil Engineering Project Based Learning (PBL)</h2>
+          <p class="text-xs text-slate-500">Subject: Quantity Surveying, Estimation and Construction Project Management</p>
+        </div>
+        <div class="text-right text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+          <p><span class="text-slate-500">Topic:</span> <strong>Construction Material Wastage and Cost Control</strong></p>
+          <p><span class="text-slate-500">Target Demonstration:</span> <strong>Live Quantity Surveying Impact Model</strong></p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Problem Statement -->
+        <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
+          <div class="flex items-center gap-2 mb-2 text-red-600 font-bold text-xs uppercase tracking-wider">
+            <i data-lucide="alert-octagon" class="w-4 h-4"></i> Problem Statement
+          </div>
+          <p class="text-xs text-slate-700 leading-relaxed">
+            Material wastage during construction can inflate project costs by 8% to 15% and degrade resource efficiency. Inaccurate estimation, poor site storage, improper handling, and cutting losses generate substantial economic and environmental penalties.
+          </p>
+        </div>
+
+        <!-- Objective -->
+        <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
+          <div class="flex items-center gap-2 mb-2 text-blue-700 font-bold text-xs uppercase tracking-wider">
+            <i data-lucide="target" class="w-4 h-4"></i> Project Objective
+          </div>
+          <p class="text-xs text-slate-700 leading-relaxed">
+            To develop a simple, responsive digital tool tailored for Civil Engineering students and junior site supervisors to quantify material losses, calculate financial leakage in Indian Rupees (₹), and trigger data-backed control measures.
+          </p>
+        </div>
+
+        <!-- Proposed Solution -->
+        <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
+          <div class="flex items-center gap-2 mb-2 text-amber-600 font-bold text-xs uppercase tracking-wider">
+            <i data-lucide="lightbulb" class="w-4 h-4"></i> Proposed Solution
+          </div>
+          <p class="text-xs text-slate-700 leading-relaxed">
+            The BuildWaste platform calculates exact variance percentage and wastage cost against verified rates. It compares purchased vs. used volumes and maps them against standard permissible construction tolerances.
+          </p>
+        </div>
+
+        <!-- Expected Outcome -->
+        <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
+          <div class="flex items-center gap-2 mb-2 text-emerald-600 font-bold text-xs uppercase tracking-wider">
+            <i data-lucide="trending-up" class="w-4 h-4"></i> Expected Outcome
+          </div>
+          <p class="text-xs text-slate-700 leading-relaxed">
+            Enables immediate site monitoring, discourages subcontractor pilferage, enforces precision rebar cutting, and secures significant financial savings throughout project execution.
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick Demonstration Steps (For student presentation) -->
+      <div class="mt-6 p-4 bg-blue-900 text-white rounded-xl flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <h4 class="text-sm font-bold text-amber-400">PBL Demonstration Flow (Quick 1-Minute Pitch):</h4>
+          <p class="text-xs text-blue-100 mt-0.5">
+            1. Enter Material & Unit &rarr; 2. Input Purchased & Used Qty &rarr; 3. Enter Market Rate (₹) &rarr; 4. System auto-computes Wastage % & Cost &rarr; 5. Review actionable recommendations & print report.
+          </p>
+        </div>
+        <button onclick="document.getElementById('materials').scrollIntoView({behavior: 'smooth'})" class="whitespace-nowrap px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-xs transition">
+          Test Calculator Now &rarr;
+        </button>
+      </div>
+    </section>
+
+    <!-- PRINT ONLY REPORT SUMMARY TABLE -->
+    <div class="print-only page-break mt-6">
+      <h3 class="text-lg font-bold border-b border-slate-400 pb-1 mb-3">Official Quantity Surveying Audit Sign-Off</h3>
+      <table class="w-full text-xs text-left mb-6">
+        <tr>
+          <td class="py-1"><strong>Prepared By:</strong> Civil Engineering PBL Team</td>
+          <td class="py-1"><strong>Checked By:</strong> Project Guide / Faculty In-Charge</td>
+        </tr>
+        <tr>
+          <td class="py-1"><strong>Site Location:</strong> Sector 4, Residential Zone</td>
+          <td class="py-1"><strong>Audit Status:</strong> Final Evaluation Report</td>
+        </tr>
+      </table>
+      <div class="border-t border-slate-300 pt-8 mt-12 flex justify-between text-xs text-slate-600">
+        <div>Student Team Signature</div>
+        <div>Internal Examiner Signature</div>
+        <div>External Examiner / HOD Signature</div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal for Adding New Material -->
+  <div id="addMaterialModal" class="fixed inset-0 bg-slate-950/60 z-50 flex items-center justify-center p-4 hidden no-print backdrop-blur-sm">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-150">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+        <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+          <i data-lucide="plus-circle" class="w-5 h-5 text-blue-600"></i>
+          Add New Construction Material
+        </h3>
+        <button onclick="closeAddMaterialModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="newMaterialForm" onsubmit="handleNewMaterialSubmit(event)" class="space-y-3.5 text-xs sm:text-sm">
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">Material Name</label>
+          <input type="text" id="newMatName" required placeholder="e.g. Paint, Plywood, PVC Pipes" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Unit of Measure</label>
+            <input type="text" id="newMatUnit" required placeholder="e.g. bags, kg, m³, lit" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Rate per Unit (₹)</label>
+            <input type="number" step="any" min="0" id="newMatRate" required placeholder="e.g. 350" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Quantity Purchased</label>
+            <input type="number" step="any" min="0" id="newMatPurchased" required placeholder="Total bought" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Quantity Used</label>
+            <input type="number" step="any" min="0" id="newMatUsed" required placeholder="Net utilized" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+          <button type="button" onclick="closeAddMaterialModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium text-xs">
+            Cancel
+          </button>
+          <button type="submit" class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg font-semibold text-xs shadow-sm flex items-center gap-1.5">
+            <i data-lucide="check" class="w-4 h-4"></i> Add to Register
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-brand-primary text-slate-300 text-xs py-6 border-t border-slate-800 no-print mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>
+        <p class="font-semibold text-white">BuildWaste – Construction Material Wastage & Cost Control System</p>
+        <p class="text-slate-400">Civil Engineering Project Based Learning (PBL) | Quantity Surveying & Cost Estimation</p>
+      </div>
+      <div class="flex items-center space-x-4">
+        <span>Project: Residential Building</span>
+        <span>•</span>
+        <span>CE-PBL Batch 2024–25</span>
+        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded">
+          <i data-lucide="arrow-up" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Application Script & Core Logic -->
+  <script>
+    // Initial sample dataset specified by user prompt
+    const initialSampleData = [
+      { id: 1, name: "Cement", unit: "bags", purchased: 100, used: 92, rate: 450 },
+      { id: 2, name: "Steel", unit: "kg", purchased: 1000, used: 950, rate: 65 },
+      { id: 3, name: "Sand", unit: "m³", purchased: 20, used: 18, rate: 1800 },
+      { id: 4, name: "Aggregate", unit: "m³", purchased: 25, used: 23.5, rate: 1600 },
+      { id: 5, name: "Bricks", unit: "nos", purchased: 5000, used: 4700, rate: 10 },
+      { id: 6, name: "Tiles", unit: "m²", purchased: 1000, used: 920, rate: 550 }
+    ];
+
+    let materials = JSON.parse(JSON.stringify(initialSampleData));
+    let materialsBarChart = null;
+    let costDonutChart = null;
+
+    // Helper: Format Indian Rupee Currency
+    function formatINR(val) {
+      if (isNaN(val) || val === null || val === undefined) return "₹0";
+      const rounded = Math.round(val);
+      return "₹" + rounded.toLocaleString('en-IN');
+    }
+
+    // Helper: Format Number with decimals
+    function formatNumber(val, decimals = 1) {
+      if (isNaN(val) || val === null || val === undefined) return "0";
+      return Number(val.toFixed(decimals)).toString();
+    }
+
+    // Classify wastage status per prompt requirement:
+    // 0-5%: Low Wastage (Green)
+    // 5-10%: Moderate Wastage (Orange/Amber)
+    // >10%: High Wastage (Red)
+    function getWastageStatus(percentage) {
+      if (percentage <= 5.0) {
+        return {
+          label: "Low Wastage",
+          code: "low",
+          bgClass: "bg-emerald-100 text-emerald-800 border-emerald-300",
+          dotColor: "bg-emerald-500",
+          textColor: "text-emerald-700"
+        };
+      } else if (percentage <= 10.0) {
+        return {
+          label: "Moderate Wastage",
+          code: "moderate",
+          bgClass: "bg-amber-100 text-amber-800 border-amber-300",
+          dotColor: "bg-amber-500",
+          textColor: "text-amber-700"
+        };
+      } else {
+        return {
+          label: "High Wastage",
+          code: "high",
+          bgClass: "bg-red-100 text-red-800 border-red-300",
+          dotColor: "bg-red-500",
+          textColor: "text-red-700"
+        };
+      }
+    }
+
+    // Calculation engine for a single material item
+    function calculateItemMetrics(item) {
+      const purchased = parseFloat(item.purchased) || 0;
+      const used = parseFloat(item.used) || 0;
+      const rate = parseFloat(item.rate) || 0;
+
+      // Wastage Quantity = Quantity Purchased - Quantity Used
+      let wastageQty = purchased - used;
+      if (wastageQty < 0) wastageQty = 0; // Safeguard if used exceeds purchased
+
+      // Wastage % = (Wastage Quantity / Quantity Purchased) * 100
+      let wastagePercent = 0;
+      if (purchased > 0) {
+        wastagePercent = (wastageQty / purchased) * 100;
+      }
+
+      // Wastage Cost = Wastage Quantity * Rate
+      const wastageCost = wastageQty * rate;
+      const purchasedCost = purchased * rate;
+      const usedCost = used * rate;
+
+      return {
+        ...item,
+        purchased,
+        used,
+        rate,
+        wastageQty,
+        wastagePercent,
+        wastageCost,
+        purchasedCost,
+        usedCost,
+        status: getWastageStatus(wastagePercent)
+      };
+    }
+
+    // Render the Materials Table
+    function renderTable() {
+      const tbody = document.getElementById("materialsTableBody");
+      tbody.innerHTML = "";
+
+      if (materials.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="10" class="py-8 text-center text-slate-400">
+              <i data-lucide="package-open" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+              No materials listed. Click "Add Material" or "Default Samples" to begin.
+            </td>
+          </tr>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      materials.forEach((rawItem, index) => {
+        const item = calculateItemMetrics(rawItem);
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-blue-50/40 transition-colors group";
+
+        tr.innerHTML = `
+          <td class="py-2.5 px-4 font-semibold text-slate-900">
+            <span class="inline-flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full ${item.status.dotColor}"></span>
+              ${item.name}
+            </span>
+          </td>
+          <td class="py-2.5 px-3 text-slate-500 font-mono text-xs">
+            ${item.unit}
+          </td>
+          <td class="py-2.5 px-3">
+            <input type="number" step="any" min="0" value="${item.purchased}"
+              onchange="updateMaterialField(${item.id}, 'purchased', this.value)"
+              class="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 focus:border-blue-500 rounded px-2 py-1 text-slate-900 font-mono text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none transition">
+          </td>
+          <td class="py-2.5 px-3">
+            <input type="number" step="any" min="0" value="${item.used}"
+              onchange="updateMaterialField(${item.id}, 'used', this.value)"
+              class="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 focus:border-blue-500 rounded px-2 py-1 text-slate-900 font-mono text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none transition">
+          </td>
+          <td class="py-2.5 px-3">
+            <div class="relative">
+              <span class="absolute left-2 top-1 text-slate-400 text-xs">₹</span>
+              <input type="number" step="any" min="0" value="${item.rate}"
+                onchange="updateMaterialField(${item.id}, 'rate', this.value)"
+                class="w-full pl-5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 focus:border-blue-500 rounded px-2 py-1 text-slate-900 font-mono text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none transition">
+            </div>
+          </td>
+          <td class="py-2.5 px-3 text-right font-mono font-medium text-slate-800">
+            ${formatNumber(item.wastageQty)} <span class="text-[10px] text-slate-500">${item.unit}</span>
+          </td>
+          <td class="py-2.5 px-3 text-right font-mono font-bold ${item.status.textColor}">
+            ${item.wastagePercent.toFixed(2)}%
+          </td>
+          <td class="py-2.5 px-3 text-right font-mono font-bold text-red-600">
+            ${formatINR(item.wastageCost)}
+          </td>
+          <td class="py-2.5 px-3 text-center">
+            <span class="inline-block px-2 py-0.5 rounded text-[11px] font-semibold border ${item.status.bgClass}">
+              ${item.status.label}
+            </span>
+          </td>
+          <td class="py-2.5 px-3 text-center no-print">
+            <button onclick="deleteMaterial(${item.id})" title="Delete material"
+              class="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+
+      lucide.createIcons();
+    }
+
+    // Update material property and refresh UI
+    function updateMaterialField(id, field, value) {
+      const idx = materials.findIndex(m => m.id === id);
+      if (idx !== -1) {
+        const numVal = parseFloat(value);
+        materials[idx][field] = isNaN(numVal) || numVal < 0 ? 0 : numVal;
+        recalculateAll();
+      }
+    }
+
+    // Delete a material
+    function deleteMaterial(id) {
+      materials = materials.filter(m => m.id !== id);
+      recalculateAll();
+    }
+
+    // Reset data (empty)
+    function resetData() {
+      if (confirm("Reset all material data? This will clear the table.")) {
+        materials = [];
+        recalculateAll();
+      }
+    }
+
+    // Reload default prompt sample data
+    function loadSampleData() {
+      materials = JSON.parse(JSON.stringify(initialSampleData));
+      recalculateAll();
+    }
+
+    // Core Calculation & UI Aggregation Handler
+    function recalculateAll() {
+      const computedItems = materials.map(calculateItemMetrics);
+
+      const totalItemsCount = computedItems.length;
+      let totalWastageQuantity = 0;
+      let totalPurchasedCost = 0;
+      let totalUsedCost = 0;
+      let totalWastageCost = 0;
+      let sumWastagePercentages = 0;
+
+      let totalPurchasedUnitsSum = 0;
+      let totalUsedUnitsSum = 0;
+
+      computedItems.forEach(item => {
+        totalWastageQuantity += item.wastageQty;
+        totalPurchasedCost += item.purchasedCost;
+        totalUsedCost += item.usedCost;
+        totalWastageCost += item.wastageCost;
+        sumWastagePercentages += item.wastagePercent;
+        totalPurchasedUnitsSum += item.purchased;
+        totalUsedUnitsSum += item.used;
+      });
+
+      const averageWastagePercent = totalItemsCount > 0 ? (sumWastagePercentages / totalItemsCount) : 0;
+      const overallStatus = getWastageStatus(averageWastagePercent);
+
+      // 1. Update KPI Dashboard Cards
+      document.getElementById("kpiTotalMaterials").textContent = totalItemsCount;
+      document.getElementById("kpiTotalWastageQty").textContent = formatNumber(totalWastageQuantity, 1);
+      document.getElementById("kpiAvgWastagePercent").textContent = averageWastagePercent.toFixed(2) + "%";
+      document.getElementById("kpiTotalWastageCost").textContent = formatINR(totalWastageCost);
+
+      const kpiBadge = document.getElementById("kpiWastageBadge");
+      kpiBadge.textContent = overallStatus.label.replace(" Wastage", "");
+      kpiBadge.className = `ml-2 text-xs font-semibold px-2 py-0.5 rounded ${overallStatus.bgClass}`;
+      
+      const kpiStrip = document.getElementById("kpiStatusStrip");
+      kpiStrip.className = `absolute bottom-0 left-0 right-0 h-1 ${overallStatus.dotColor}`;
+
+      // 2. Update Cost Section & Potential Savings
+      document.getElementById("costTotalPurchased").textContent = formatINR(totalPurchasedCost);
+      document.getElementById("costTotalUsed").textContent = formatINR(totalUsedCost);
+
+      // Potential cost saving: assumed benchmark wastage reduction down to 3%
+      // Potential saving = Total Wastage Cost * (1 - 3 / AvgWastage) if Avg > 3%
+      let potentialSavings = 0;
+      if (averageWastagePercent > 3.0 && totalWastageCost > 0) {
+        const reductionRatio = (averageWastagePercent - 3.0) / averageWastagePercent;
+        potentialSavings = totalWastageCost * Math.min(1, Math.max(0, reductionRatio));
+      }
+      document.getElementById("potentialSavingsText").textContent = formatINR(potentialSavings);
+
+      // 3. Update Table Footer Totals
+      document.getElementById("footerTotalPurchased").textContent = formatNumber(totalPurchasedUnitsSum, 1);
+      document.getElementById("footerTotalUsed").textContent = formatNumber(totalUsedUnitsSum, 1);
+      document.getElementById("footerWastageQty").textContent = formatNumber(totalWastageQuantity, 1);
+      document.getElementById("footerAvgWastage").textContent = averageWastagePercent.toFixed(2) + "%";
+      document.getElementById("footerTotalCost").textContent = formatINR(totalWastageCost);
+
+      const footerBadge = document.getElementById("footerStatusBadge");
+      footerBadge.innerHTML = `<span class="px-2 py-0.5 rounded text-xs border ${overallStatus.bgClass}">${overallStatus.label}</span>`;
+
+      // 4. Update Dynamic Recommendations
+      updateRecommendations(averageWastagePercent, computedItems, totalWastageCost);
+
+      // 5. Update Charts
+      updateCharts(computedItems, totalPurchasedCost, totalUsedCost, totalWastageCost);
+
+      // 6. Refresh Table Rows
+      renderTable();
+    }
+
+    // Dynamic Recommendation Engine based on prompt rules
+    function updateRecommendations(avgPercentage, computedItems, totalCost) {
+      const recBox = document.getElementById("dynamicRecommendationBox");
+      const recHeadline = document.getElementById("recHeadline");
+      const recBody = document.getElementById("recBody");
+      const recIcon = document.getElementById("recIcon");
+      const statusIndicator = document.getElementById("siteStatusIndicator");
+
+      if (computedItems.length === 0) {
+        recHeadline.textContent = "No Material Data Available";
+        recBody.textContent = "Please input material details to generate site recommendations.";
+        recBox.className = "p-4 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 mb-4";
+        return;
+      }
+
+      if (avgPercentage <= 5.0) {
+        recHeadline.textContent = "Low Wastage (0–5%) – Site Efficiency High";
+        recBody.textContent = "Material wastage is under control. Continue regular monitoring, maintain standard storage protocols, and carry on with daily site issue records.";
+        recBox.className = "p-4 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-900 mb-4";
+        statusIndicator.className = "px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800";
+        statusIndicator.textContent = "Under Control";
+      } else if (avgPercentage <= 10.0) {
+        recHeadline.textContent = "Moderate Wastage (5–10%) – Process Review Needed";
+        recBody.textContent = "Review material handling and storage practices. Inspect staging zones for weather vulnerability, enforce rebar cutting schedule adherence, and monitor mortar batching on-site.";
+        recBox.className = "p-4 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 mb-4";
+        statusIndicator.className = "px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800";
+        statusIndicator.textContent = "Attention Required";
+      } else {
+        recHeadline.textContent = "High Material Wastage Detected (>10%) – Immediate Action Required";
+        recBody.textContent = "High material wastage detected. Review quantity estimation, storage, handling and cutting practices. Audit subcontractor logs and check for bulk transit spillage immediately.";
+        recBox.className = "p-4 rounded-lg bg-red-50 border border-red-300 text-red-900 mb-4";
+        statusIndicator.className = "px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800";
+        statusIndicator.textContent = "Critical Risk";
+      }
+
+      // Identify high-loss individual materials
+      const criticalContainer = document.getElementById("criticalMaterialsList");
+      criticalContainer.innerHTML = "";
+
+      const highWastageItems = computedItems.filter(item => item.wastagePercent > 5.0);
+      if (highWastageItems.length === 0) {
+        criticalContainer.innerHTML = `
+          <div class="p-2.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-2">
+            <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
+            <span>All materials are currently operating within acceptable low wastage thresholds (&le;5%).</span>
+          </div>
+        `;
+      } else {
+        highWastageItems.sort((a, b) => b.wastageCost - a.wastageCost);
+        highWastageItems.slice(0, 3).forEach(item => {
+          const div = document.createElement("div");
+          div.className = "p-2 rounded bg-slate-50 border border-slate-200 flex items-center justify-between";
+          div.innerHTML = `
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full ${item.status.dotColor}"></span>
+              <strong class="text-slate-900">${item.name}</strong>
+              <span class="text-slate-500 font-mono text-[11px]">(${item.wastagePercent.toFixed(1)}% waste)</span>
+            </div>
+            <span class="font-mono font-bold text-red-600">${formatINR(item.wastageCost)} loss</span>
+          `;
+          criticalContainer.appendChild(div);
+        });
+      }
+      lucide.createIcons();
+    }
+
+    // Chart.js Visualizations
+    function initCharts() {
+      // 1. Materials Overview Bar Chart (Purchased vs Used)
+      const ctxBar = document.getElementById("materialsChart").getContext("2d");
+      materialsBarChart = new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Quantity Purchased',
+              data: [],
+              backgroundColor: '#1d4263',
+              borderRadius: 4,
+              borderSkipped: false
+            },
+            {
+              label: 'Quantity Used',
+              data: [],
+              backgroundColor: '#10b981',
+              borderRadius: 4,
+              borderSkipped: false
+            },
+            {
+              label: 'Wastage Quantity',
+              data: [],
+              backgroundColor: '#ef4444',
+              borderRadius: 4,
+              borderSkipped: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false // Displayed in custom HTML legend below
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.dataset.label}: ${context.parsed.y}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 11 } }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: '#f1f5f9' },
+              ticks: { font: { size: 10 } }
+            }
+          }
+        }
+      });
+
+      // 2. Cost Distribution Donut Chart
+      const ctxDonut = document.getElementById("costDonutChart").getContext("2d");
+      costDonutChart = new Chart(ctxDonut, {
+        type: 'doughnut',
+        data: {
+          labels: ['Utilized Material Cost', 'Wastage Cost'],
+          datasets: [{
+            data: [0, 0],
+            backgroundColor: ['#10b981', '#ef4444'],
+            hoverOffset: 4,
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '70%',
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                boxWidth: 12,
+                font: { size: 11 }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const val = context.parsed;
+                  return ` ${context.label}: ₹${val.toLocaleString('en-IN')}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Refresh Chart Data
+    function updateCharts(computedItems, totalPurchasedCost, totalUsedCost, totalWastageCost) {
+      if (!materialsBarChart || !costDonutChart) return;
+
+      // Update Bar Chart
+      materialsBarChart.data.labels = computedItems.map(item => item.name);
+      materialsBarChart.data.datasets[0].data = computedItems.map(item => item.purchased);
+      materialsBarChart.data.datasets[1].data = computedItems.map(item => item.used);
+      materialsBarChart.data.datasets[2].data = computedItems.map(item => item.wastageQty);
+      materialsBarChart.update();
+
+      // Update Donut Chart
+      costDonutChart.data.datasets[0].data = [totalUsedCost, totalWastageCost];
+      costDonutChart.update();
+    }
+
+    // Add Material Modal Controls
+    function openAddMaterialModal() {
+      document.getElementById("addMaterialModal").classList.remove("hidden");
+      document.getElementById("newMatName").focus();
+    }
+
+    function closeAddMaterialModal() {
+      document.getElementById("addMaterialModal").classList.add("hidden");
+      document.getElementById("newMaterialForm").reset();
+    }
+
+    function handleNewMaterialSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById("newMatName").value.trim();
+      const unit = document.getElementById("newMatUnit").value.trim();
+      const rate = parseFloat(document.getElementById("newMatRate").value) || 0;
+      const purchased = parseFloat(document.getElementById("newMatPurchased").value) || 0;
+      const used = parseFloat(document.getElementById("newMatUsed").value) || 0;
+
+      if (!name || !unit) {
+        alert("Please enter a valid Material name and unit.");
+        return;
+      }
+
+      const newId = materials.length > 0 ? Math.max(...materials.map(m => m.id)) + 1 : 1;
+      materials.push({
+        id: newId,
+        name,
+        unit,
+        purchased,
+        used,
+        rate
+      });
+
+      closeAddMaterialModal();
+      recalculateAll();
+    }
+
+    // Set print date
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("printDate").textContent = new Date().toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+      initCharts();
+      recalculateAll();
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
